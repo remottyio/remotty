@@ -19,6 +19,9 @@ func startServer(port string) error {
 
 	mux := http.NewServeMux()
 
+	// Root endpoint - HTML view
+	mux.HandleFunc("/", handler.Root)
+
 	// API endpoints
 	mux.HandleFunc("/register", handler.Register)
 	mux.HandleFunc("/list", handler.List)

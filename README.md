@@ -55,11 +55,17 @@ The terminal will:
 
 ### Connecting via Browser
 
-1. Open `http://localhost:8080/list` in your browser
+1. Open `http://localhost:8080` in your browser
 2. Click **Connect** on any registered host
 3. A fullscreen terminal opens with an interactive bash session
 
 ## API Endpoints
+
+### GET /
+
+View all registered hosts in HTML format.
+
+**Response:** HTML page with list of registered hosts and connect buttons.
 
 ### POST /register
 
@@ -83,7 +89,7 @@ Register a new terminal session.
 
 ### GET /list
 
-List all registered hosts. Returns JSON by default, HTML if `Accept: text/html` header is present.
+List all registered hosts in JSON format.
 
 **Response:**
 ```json
@@ -130,7 +136,7 @@ Health check endpoint.
 **Response:**
 ```json
 {
-  "status": "healthy"
+  "status": "ok"
 }
 ```
 

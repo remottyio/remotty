@@ -81,7 +81,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Root(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		h.respondError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
@@ -94,10 +94,19 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if request wants HTML (browser)
-	acceptHeader := r.Header.Get("Accept")
-	if strings.Contains(acceptHeader, "text/html") {
-		h.renderHostListHTML(w, hosts)
+	h.renderHostListHTML(w, hosts)
+}
+
+func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		h.respondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		return
+	}
+
+	hosts, err := h.store.List()
+	if err != nil {
+		h.log.WithError(err).Error("Failed to list hosts")
+		h.respondError(w, http.StatusInternalServerError, "Internal error")
 		return
 	}
 
@@ -257,7 +266,7 @@ func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{
-		"status": "healthy",
+		"status": "ok",
 	})
 }
 
