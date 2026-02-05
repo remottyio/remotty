@@ -1,7 +1,8 @@
 # TODO
 
 - [ ] Run tests and compile through github actions
-- [ ] Publish mac & linux artifacts to github
+- [ ] Publish mac & linux artifacts to github upon x.x.x tag
+- [ ] Add --version
 - [ ] Create dockerfile
 - [ ] Publish docker image to docker hub
 - [ ] Create npm installation

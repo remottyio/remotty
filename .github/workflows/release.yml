@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.5'
+
+      - name: Run tests
+        run: make test
+
+  build-linux:
+    name: Build Linux Binary
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.5'
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build Linux binary
+        run: |
+          go mod tidy
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.version=${{ steps.get_version.outputs.VERSION }}" -o remotty
+
+      - name: Create Linux zip
+        run: zip remotty-linux-${{ steps.get_version.outputs.VERSION }}.zip remotty
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-binary
+          path: remotty-linux-${{ steps.get_version.outputs.VERSION }}.zip
+
+  build-macos:
+    name: Build macOS Universal Binary
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.5'
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Build for AMD64
+        run: |
+          go mod tidy
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X main.version=${{ steps.get_version.outputs.VERSION }}" -o remotty-amd64
+
+      - name: Build for ARM64
+        run: CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w -X main.version=${{ steps.get_version.outputs.VERSION }}" -o remotty-arm64
+
+      - name: Create universal binary with lipo
+        run: lipo -create -output remotty remotty-amd64 remotty-arm64
+
+      - name: Verify universal binary
+        run: lipo -info remotty
+
+      - name: Create macOS zip
+        run: zip remotty-macos-${{ steps.get_version.outputs.VERSION }}.zip remotty
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-binary
+          path: remotty-macos-${{ steps.get_version.outputs.VERSION }}.zip
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-binary
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-binary
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            remotty-linux-${{ steps.get_version.outputs.VERSION }}.zip
+            remotty-macos-${{ steps.get_version.outputs.VERSION }}.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

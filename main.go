@@ -8,6 +8,9 @@ import (
 )
 
 var (
+	// Version is set via ldflags during build
+	version = "dev"
+
 	// Server flags
 	serverPort string
 
@@ -19,9 +22,10 @@ var (
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "remotty",
-		Short: "Remotty - Terminal management over WebRTC",
-		Long:  "Remotty allows you to manage terminal sessions over WebRTC with a centralized server.",
+		Use:     "remotty",
+		Short:   "Remotty - Terminal management over WebRTC",
+		Long:    "Remotty allows you to manage terminal sessions over WebRTC with a centralized server.",
+		Version: version,
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 		},
