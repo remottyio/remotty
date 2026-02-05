@@ -1,4 +1,4 @@
-.PHONY: build run clean test install
+.PHONY: build run clean test install vulncheck
 
 BINARY_NAME=remotty
 VERSION?=dev
@@ -13,4 +13,8 @@ clean:
 
 test:
 	go test -v ./...
+
+vulncheck:
+	@test -f $(shell go env GOPATH)/bin/govulncheck || (echo "Installing govulncheck..." && go install golang.org/x/vuln/cmd/govulncheck@latest)
+	$(shell go env GOPATH)/bin/govulncheck ./... || true
 

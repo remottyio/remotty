@@ -24,9 +24,24 @@ jobs:
       - name: Run tests
         run: make test
 
+  vulncheck:
+    name: Vulnerability Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.5'
+
+      - name: Run vulnerability check
+        run: make vulncheck
+
   build-linux:
     name: Build Linux Binary
-    needs: test
+    needs: [test, vulncheck]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -57,7 +72,7 @@ jobs:
 
   build-macos:
     name: Build macOS Universal Binary
-    needs: test
+    needs: [test, vulncheck]
     runs-on: macos-latest
     steps:
       - name: Checkout code
