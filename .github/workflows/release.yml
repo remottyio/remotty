@@ -40,7 +40,7 @@ jobs:
         run: make vulncheck
 
   build-linux:
-    name: Build Linux Binary
+    name: Build Linux Binaries
     needs: [test, vulncheck]
     runs-on: ubuntu-latest
     steps:
@@ -56,19 +56,27 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Build Linux binary
+      - name: Build Linux AMD64 binary
         run: |
           go mod tidy
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.version=${{ steps.get_version.outputs.VERSION }}" -o remotty
 
-      - name: Create Linux zip
-        run: zip remotty-linux-${{ steps.get_version.outputs.VERSION }}.zip remotty
+      - name: Create Linux AMD64 zip
+        run: zip remotty-linux-amd64-${{ steps.get_version.outputs.VERSION }}.zip remotty
 
-      - name: Upload Linux artifact
+      - name: Build Linux ARM64 binary
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w -X main.version=${{ steps.get_version.outputs.VERSION }}" -o remotty
+
+      - name: Create Linux ARM64 zip
+        run: zip remotty-linux-arm64-${{ steps.get_version.outputs.VERSION }}.zip remotty
+
+      - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-binary
-          path: remotty-linux-${{ steps.get_version.outputs.VERSION }}.zip
+          name: linux-binaries
+          path: |
+            remotty-linux-amd64-${{ steps.get_version.outputs.VERSION }}.zip
+            remotty-linux-arm64-${{ steps.get_version.outputs.VERSION }}.zip
 
   build-macos:
     name: Build macOS Universal Binary
@@ -119,10 +127,10 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Download Linux artifact
+      - name: Download Linux artifacts
         uses: actions/download-artifact@v4
         with:
-          name: linux-binary
+          name: linux-binaries
 
       - name: Download macOS artifact
         uses: actions/download-artifact@v4
@@ -133,7 +141,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            remotty-linux-${{ steps.get_version.outputs.VERSION }}.zip
+            remotty-linux-amd64-${{ steps.get_version.outputs.VERSION }}.zip
+            remotty-linux-arm64-${{ steps.get_version.outputs.VERSION }}.zip
             remotty-macos-${{ steps.get_version.outputs.VERSION }}.zip
           generate_release_notes: true
         env:
