@@ -1,0 +1,5 @@
+/* Minimal custom styles for terminal fullscreen */
+#terminal {
+    width: 100%;
+    height: 100%;
+}

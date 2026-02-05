@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Remotty</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-4 text-success">🖥️ Remotty</h1>
+                <p class="lead text-muted">Registered terminal sessions</p>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            {{if .Hosts}}
+                {{range .Hosts}}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-success border-opacity-25">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">{{.ID}}</h5>
+                            <p class="card-text text-muted small">
+                                <span class="d-block">📍 {{.RemoteAddr}}</span>
+                                <span class="d-block">🕐 {{.RegisteredAt.Format "Jan 02, 15:04:05"}}</span>
+                            </p>
+                            <button class="btn btn-success w-100" onclick="showSDP('{{.ID}}')">
+                                Connect
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {{end}}
+            {{else}}
+            <div class="col-12">
+                <div class="alert alert-info text-center" role="alert">
+                    <h4 class="alert-heading">No hosts registered yet</h4>
+                    <p class="mb-0">Use <code>remotty agent register</code> to add a host</p>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Terminal Modal -->
+    <div id="terminalModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:#000; z-index:9999;">
+        <div class="d-flex justify-content-between align-items-center bg-dark border-bottom border-success px-3 py-2">
+            <h5 class="mb-0 text-success" id="terminalTitle">Connecting...</h5>
+            <button type="button" class="btn-close btn-close-white" onclick="closeTerminal()"></button>
+        </div>
+        <div id="terminal" style="height:calc(100vh - 50px); padding:10px;"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
+    <script src="/static/js/terminal.js"></script>
+</body>
+</html>
