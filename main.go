@@ -15,9 +15,10 @@ var (
 	serverPort string
 
 	// Agent flags
-	agentID     string
-	serverURL   string
-	stunServer  string
+	agentID      string
+	serverURL    string
+	stunServer   string
+	agentTimeout int
 )
 
 func main() {
@@ -81,8 +82,9 @@ func main() {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			rs := registerSession{
-				id:   agentID,
-				host: serverURL,
+				id:      agentID,
+				host:    serverURL,
+				timeout: agentTimeout,
 			}
 			rs.stunServers = []string{stunServer}
 
@@ -96,6 +98,7 @@ func main() {
 	agentRegisterCmd.Flags().StringVar(&agentID, "id", "", "Host ID for registration (required)")
 	agentRegisterCmd.Flags().StringVar(&serverURL, "server", "", "Manager server URL (required, e.g., http://localhost:8080)")
 	agentRegisterCmd.Flags().StringVar(&stunServer, "stun", "stun:stun.l.google.com:19302", "STUN server")
+	agentRegisterCmd.Flags().IntVar(&agentTimeout, "timeout", 0, "Connection timeout in seconds (0 = wait indefinitely)")
 
 	agentCmd.AddCommand(agentRegisterCmd)
 

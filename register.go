@@ -23,6 +23,7 @@ type registerSession struct {
 	session
 	id        string
 	host      string
+	timeout   int // timeout in seconds, 0 = indefinite
 	ptmx      *os.File
 	ptmxReady bool
 }
@@ -54,7 +55,11 @@ func (rs *registerSession) run() error {
 		return err
 	}
 
-	colorstring.Printf("[bold]Waiting for connection (60 seconds)...\n")
+	if rs.timeout > 0 {
+		colorstring.Printf("[bold]Waiting for connection (%d seconds)...\n", rs.timeout)
+	} else {
+		colorstring.Printf("[bold]Waiting for connection (indefinitely)...\n")
+	}
 	answerSDP, err := rs.pollForAnswer()
 	if err != nil {
 		return err
@@ -143,14 +148,21 @@ func (rs *registerSession) sendRegistrationWithRetry(jsonData []byte) error {
 }
 
 func (rs *registerSession) pollForAnswer() (string, error) {
-	const maxWait = 60 * time.Second
-	deadline := time.Now().Add(maxWait)
+	var deadline time.Time
+	if rs.timeout > 0 {
+		deadline = time.Now().Add(time.Duration(rs.timeout) * time.Second)
+	}
+	// If timeout is 0, deadline remains zero value (indefinite)
 
 	client := &http.Client{
 		Timeout: 15 * time.Second, // 10s server wait + 5s network overhead
 	}
 
-	for time.Now().Before(deadline) {
+	for {
+		// Check deadline only if timeout is set
+		if rs.timeout > 0 && time.Now().After(deadline) {
+			break
+		}
 		resp, err := client.Get(rs.host + "/api/1/answer/" + rs.id)
 		if err != nil {
 			// Small delay before retry on error
@@ -180,7 +192,10 @@ func (rs *registerSession) pollForAnswer() (string, error) {
 		return "", fmt.Errorf("server error: %s", errResp["error"])
 	}
 
-	return "", fmt.Errorf("timeout waiting for connection (60 seconds)")
+	if rs.timeout > 0 {
+		return "", fmt.Errorf("timeout waiting for connection (%d seconds)", rs.timeout)
+	}
+	return "", fmt.Errorf("connection polling stopped unexpectedly")
 }
 
 func (rs *registerSession) setRemoteDescriptionAndWait(answerSDP string) error {
