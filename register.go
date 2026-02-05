@@ -113,7 +113,7 @@ func (rs *registerSession) sendRegistrationWithRetry(jsonData []byte) error {
 		}
 
 		resp, err := client.Post(
-			rs.host+"/register",
+			rs.host+"/api/1/register",
 			"application/json",
 			bytes.NewBuffer(jsonData),
 		)
@@ -127,7 +127,7 @@ func (rs *registerSession) sendRegistrationWithRetry(jsonData []byte) error {
 		switch resp.StatusCode {
 		case http.StatusOK, http.StatusCreated:
 			colorstring.Printf("[bold][green]Successfully registered with ID: %s\n", rs.id)
-			colorstring.Printf("[bold]Registration URL: %s/connect/%s\n", rs.host, rs.id)
+			colorstring.Printf("[bold]Registration URL: %s/api/1/connect/%s\n", rs.host, rs.id)
 			return nil
 
 		case http.StatusConflict:
@@ -157,7 +157,7 @@ func (rs *registerSession) pollForAnswer() (string, error) {
 	}
 
 	for time.Now().Before(deadline) {
-		resp, err := client.Get(rs.host + "/answer/" + rs.id)
+		resp, err := client.Get(rs.host + "/api/1/answer/" + rs.id)
 		if err != nil {
 			time.Sleep(pollInterval)
 			continue

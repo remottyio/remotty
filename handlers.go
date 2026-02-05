@@ -120,7 +120,7 @@ func (h *Handler) Connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := strings.TrimPrefix(r.URL.Path, "/connect/")
+	path := strings.TrimPrefix(r.URL.Path, "/api/1/connect/")
 	id := strings.TrimSpace(path)
 
 	if id == "" {
@@ -172,7 +172,7 @@ func (h *Handler) PostAnswer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := strings.TrimPrefix(r.URL.Path, "/answer/")
+	path := strings.TrimPrefix(r.URL.Path, "/api/1/answer/")
 	id := strings.TrimSpace(path)
 
 	if id == "" {
@@ -228,7 +228,7 @@ func (h *Handler) GetAnswer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := strings.TrimPrefix(r.URL.Path, "/answer/")
+	path := strings.TrimPrefix(r.URL.Path, "/api/1/answer/")
 	id := strings.TrimSpace(path)
 
 	if id == "" {

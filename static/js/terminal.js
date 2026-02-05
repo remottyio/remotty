@@ -33,7 +33,7 @@ async function showSDP(hostId) {
 
     try {
         // Fetch raw SDP offer
-        const response = await fetch('/connect/' + hostId + '?raw=true');
+        const response = await fetch('/api/1/connect/' + hostId + '?raw=true');
         const data = await response.json();
 
         if (!response.ok) {
@@ -125,7 +125,7 @@ async function showSDP(hostId) {
         term.writeln('Sending answer to host...');
 
         // Send answer to server
-        const answerResponse = await fetch('/answer/' + hostId, {
+        const answerResponse = await fetch('/api/1/answer/' + hostId, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

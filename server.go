@@ -22,11 +22,14 @@ func startServer(port string) error {
 	// Root endpoint - HTML view
 	mux.HandleFunc("/", handler.Root)
 
-	// API endpoints
-	mux.HandleFunc("/register", handler.Register)
-	mux.HandleFunc("/list", handler.List)
-	mux.HandleFunc("/connect/", handler.Connect)
-	mux.HandleFunc("/answer/", func(w http.ResponseWriter, r *http.Request) {
+	// Health endpoint (for load balancers)
+	mux.HandleFunc("/health", handler.Health)
+
+	// API v1 endpoints
+	mux.HandleFunc("/api/1/register", handler.Register)
+	mux.HandleFunc("/api/1/list", handler.List)
+	mux.HandleFunc("/api/1/connect/", handler.Connect)
+	mux.HandleFunc("/api/1/answer/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			handler.PostAnswer(w, r)
 		} else if r.Method == http.MethodGet {
@@ -35,7 +38,6 @@ func startServer(port string) error {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
-	mux.HandleFunc("/health", handler.Health)
 
 	// Static files
 	fs := http.FileServer(http.Dir("static"))

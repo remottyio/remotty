@@ -67,7 +67,20 @@ View all registered hosts in HTML format.
 
 **Response:** HTML page with list of registered hosts and connect buttons.
 
-### POST /register
+### GET /health
+
+Health check endpoint for load balancers.
+
+**Response:**
+```json
+{
+  "status": "ok"
+}
+```
+
+## API Version 1 (`/api/1/`)
+
+### POST /api/1/register
 
 Register a new terminal session.
 
@@ -87,7 +100,7 @@ Register a new terminal session.
 }
 ```
 
-### GET /list
+### GET /api/1/list
 
 List all registered hosts in JSON format.
 
@@ -102,7 +115,7 @@ List all registered hosts in JSON format.
 ]
 ```
 
-### GET /connect/:id
+### GET /api/1/connect/:id
 
 Get encoded SDP offer for a host. Add `?raw=true` to get decoded SDP for WebRTC.
 
@@ -114,7 +127,7 @@ Get encoded SDP offer for a host. Add `?raw=true` to get decoded SDP for WebRTC.
 }
 ```
 
-### POST /answer/:id
+### POST /api/1/answer/:id
 
 Submit WebRTC answer from browser.
 
@@ -125,20 +138,9 @@ Submit WebRTC answer from browser.
 }
 ```
 
-### GET /answer/:id
+### GET /api/1/answer/:id
 
 Poll for answer (used by terminal client). Returns `204 No Content` if no answer yet.
-
-### GET /health
-
-Health check endpoint.
-
-**Response:**
-```json
-{
-  "status": "ok"
-}
-```
 
 ## Architecture
 
@@ -148,32 +150,32 @@ Health check endpoint.
 │  (remotty)  │                  │   Server  │                        │          │
 └─────────────┘                  └───────────┘                        └──────────┘
        │                                 │                                   │
-       │  1. POST /register              │                                   │
+       │  1. POST /api/1/register        │                                   │
        │  {id, sdp-offer}                │                                   │
        ├────────────────────────────────>│                                   │
        │                                 │                                   │
-       │  2. Poll GET /answer/:id        │                                   │
+       │  2. Poll GET /api/1/answer/:id  │                                   │
        │  (every 2 seconds)              │                                   │
        ├────────────────────────────────>│                                   │
        │    204 No Content               │                                   │
        │<────────────────────────────────┤                                   │
        │                                 │                                   │
-       │                                 │  3. GET /list                     │
+       │                                 │  3. GET /                         │
        │                                 │<──────────────────────────────────┤
        │                                 │  (HTML with host list)            │
        │                                 ├──────────────────────────────────>│
        │                                 │                                   │
-       │                                 │  4. GET /connect/:id?raw=true     │
+       │                                 │  4. GET /api/1/connect/:id?raw=true│
        │                                 │<──────────────────────────────────┤
        │                                 │  {sdp-offer}                      │
        │                                 ├──────────────────────────────────>│
        │                                 │                                   │
-       │                                 │  5. POST /answer/:id              │
+       │                                 │  5. POST /api/1/answer/:id        │
        │                                 │<──────────────────────────────────┤
        │                                 │  {answer}                         │
        │                                 ├──────────────────────────────────>│
        │                                 │                                   │
-       │  6. Poll GET /answer/:id        │                                   │
+       │  6. Poll GET /api/1/answer/:id  │                                   │
        ├────────────────────────────────>│                                   │
        │    200 OK {answer}              │                                   │
        │<────────────────────────────────┤                                   │

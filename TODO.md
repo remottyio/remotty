@@ -11,4 +11,4 @@
 - [x] Change / to show human-readable html of agents connected
 - [ ] Automatically sweep agents that are no longer listening
 - [ ] Add a flag to allow only one time shell, or multiple times
-- [ ] Change endpoints so API goes to /api/1/register and /api/1/list
+- [x] Change endpoints so API goes to /api/1/register and /api/1/list
