@@ -71,7 +71,7 @@ Register a new terminal session.
 ```json
 {
   "id": "my-laptop",
-  "sdp": "base58-encoded-sdp-offer"
+  "sdp": "v=0\r\no=- 123456789 2 IN IP4 127.0.0.1\r\n..."
 }
 ```
 
@@ -100,13 +100,13 @@ List all registered hosts in JSON format.
 
 ### GET /api/1/connect/:id
 
-Get encoded SDP offer for a host. Add `?raw=true` to get decoded SDP for WebRTC.
+Get SDP offer for a host.
 
 **Response:**
 ```json
 {
   "id": "my-laptop",
-  "sdp": "base58-encoded-sdp"
+  "sdp": "v=0\r\no=- 123456789 2 IN IP4 127.0.0.1\r\n..."
 }
 ```
 

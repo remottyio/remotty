@@ -139,24 +139,6 @@ func (h *Handler) Connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if browser wants raw SDP for WebRTC
-	wantRaw := r.URL.Query().Get("raw") == "true"
-	if wantRaw {
-		rawSDP, err := DecodeSDP(host.SDP)
-		if err != nil {
-			h.log.WithError(err).Error("Failed to decode SDP")
-			h.respondError(w, http.StatusInternalServerError, "Failed to decode SDP")
-			return
-		}
-		h.log.WithField("id", id).Info("Raw SDP retrieved for WebRTC connection")
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
-			"id":  host.ID,
-			"sdp": rawSDP,
-		})
-		return
-	}
-
 	h.log.WithField("id", id).Info("SDP retrieved for connection")
 
 	w.Header().Set("Content-Type", "application/json")
@@ -194,15 +176,7 @@ func (h *Handler) PostAnswer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Encode the raw SDP answer before storing
-	encodedAnswer, err := EncodeSDP(req.Answer)
-	if err != nil {
-		h.log.WithError(err).Error("Failed to encode answer")
-		h.respondError(w, http.StatusInternalServerError, "Failed to encode answer")
-		return
-	}
-
-	if err := h.store.SetAnswer(id, encodedAnswer); err != nil {
+	if err := h.store.SetAnswer(id, req.Answer); err != nil {
 		if errors.Is(err, ErrNotFound) {
 			h.respondError(w, http.StatusNotFound, "Host not found")
 			return

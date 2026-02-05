@@ -32,8 +32,8 @@ async function showSDP(hostId) {
     term.writeln('Connecting to ' + hostId + '...');
 
     try {
-        // Fetch raw SDP offer
-        const response = await fetch('/api/1/connect/' + hostId + '?raw=true');
+        // Fetch SDP offer
+        const response = await fetch('/api/1/connect/' + hostId);
         const data = await response.json();
 
         if (!response.ok) {

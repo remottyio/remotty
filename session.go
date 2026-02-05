@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/remottyio/remotty/pkg/sd"
 	"github.com/pion/webrtc/v3"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -16,8 +15,8 @@ type session struct {
 	errChan          chan error
 	isTerminal       bool
 	pc               *webrtc.PeerConnection
-	offer            sd.SessionDescription
-	answer           sd.SessionDescription
+	offer            string
+	answer           string
 	dc               *webrtc.DataChannel
 }
 

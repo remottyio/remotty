@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/kr/pty"
-	"github.com/remottyio/remotty/pkg/sd"
 	"github.com/mitchellh/colorstring"
 	"github.com/pion/webrtc/v3"
 )
@@ -41,11 +40,9 @@ func (rs *registerSession) run() error {
 
 	rs.pc.OnDataChannel(rs.onDataChannel())
 
-	encodedSDP := sd.Encode(rs.offer)
-
 	reqBody := RegisterRequest{
 		ID:  rs.id,
-		SDP: encodedSDP,
+		SDP: rs.offer,
 	}
 
 	jsonData, err := json.Marshal(reqBody)
@@ -89,9 +86,7 @@ func (rs *registerSession) createOffer() error {
 
 	<-gatherComplete
 
-	rs.offer = sd.SessionDescription{
-		Sdp: rs.pc.LocalDescription().SDP,
-	}
+	rs.offer = rs.pc.LocalDescription().SDP
 	return nil
 }
 
@@ -188,24 +183,19 @@ func (rs *registerSession) pollForAnswer() (string, error) {
 	return "", fmt.Errorf("timeout waiting for connection (60 seconds)")
 }
 
-func (rs *registerSession) setRemoteDescriptionAndWait(encodedAnswer string) error {
-	answerSD, err := sd.Decode(encodedAnswer)
-	if err != nil {
-		return fmt.Errorf("failed to decode answer: %w", err)
-	}
-
+func (rs *registerSession) setRemoteDescriptionAndWait(answerSDP string) error {
 	answer := webrtc.SessionDescription{
 		Type: webrtc.SDPTypeAnswer,
-		SDP:  answerSD.Sdp,
+		SDP:  answerSDP,
 	}
 
-	if err = rs.pc.SetRemoteDescription(answer); err != nil {
+	if err := rs.pc.SetRemoteDescription(answer); err != nil {
 		log.Println(err)
 		return err
 	}
 
 	colorstring.Printf("[bold][green]Terminal session connected!\n")
-	err = <-rs.errChan
+	err := <-rs.errChan
 	rs.cleanup()
 	if rs.ptmx != nil {
 		rs.ptmx.Close()
