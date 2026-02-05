@@ -8,6 +8,8 @@ A web-based terminal management server that allows you to register terminal sess
 - **Web UI**: Clean Bootstrap-based interface with xterm.js terminal
 - **Real-time Terminal**: Full PTY support with bidirectional I/O
 - **Registration System**: Hosts register and wait for browser connections
+- **Long Polling**: Server holds requests for up to 10 seconds for efficient connection handling
+- **Automatic Cleanup**: Inactive agents are automatically removed after 15 seconds
 - **RESTful API**: JSON API for programmatic access
 - **Structured Logging**: JSON logging with logrus
 
@@ -123,7 +125,7 @@ Submit WebRTC answer from browser.
 
 ### GET /api/1/answer/:id
 
-Poll for answer (used by terminal client). Returns `204 No Content` if no answer yet.
+Long poll for answer (used by terminal client). Server waits up to 10 seconds for an answer before returning `204 No Content` if none is available.
 
 ## Architecture
 
@@ -137,10 +139,10 @@ Poll for answer (used by terminal client). Returns `204 No Content` if no answer
        │  {id, sdp-offer}                │                                   │
        ├────────────────────────────────>│                                   │
        │                                 │                                   │
-       │  2. Poll GET /api/1/answer/:id  │                                   │
-       │  (every 2 seconds)              │                                   │
+       │  2. Long poll /api/1/answer/:id │                                   │
+       │  (waits up to 10s on server)    │                                   │
        ├────────────────────────────────>│                                   │
-       │    204 No Content               │                                   │
+       │    204 No Content (after 10s)   │                                   │
        │<────────────────────────────────┤                                   │
        │                                 │                                   │
        │                                 │  3. GET /                         │

@@ -1,16 +1,21 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"errors"
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
 
-var templates = template.Must(template.ParseGlob("templates/*.html"))
+//go:embed templates/*.html
+var templateFS embed.FS
+
+var templates = template.Must(template.ParseFS(templateFS, "templates/*.html"))
 
 type Handler struct {
 	store Store
@@ -210,7 +215,8 @@ func (h *Handler) GetAnswer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	host, err := h.store.Get(id)
+	// Verify host exists and update last seen timestamp
+	_, err := h.store.Get(id)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			h.respondError(w, http.StatusNotFound, "Host not found")
@@ -221,19 +227,40 @@ func (h *Handler) GetAnswer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if host.Answer == "" {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNoContent)
-		return
+	// Update last seen timestamp to keep the host alive
+	if err := h.store.UpdateLastSeen(id); err != nil {
+		h.log.WithError(err).Warn("Failed to update last seen")
 	}
 
-	h.log.WithField("id", id).Info("Answer retrieved by host")
+	// Long polling: wait up to 10 seconds for an answer
+	const longPollTimeout = 10 * time.Second
+	const pollInterval = 100 * time.Millisecond
+	deadline := time.Now().Add(longPollTimeout)
 
+	for time.Now().Before(deadline) {
+		host, err := h.store.Get(id)
+		if err != nil {
+			// Host was deleted while we were polling
+			h.respondError(w, http.StatusNotFound, "Host not found")
+			return
+		}
+
+		if host.Answer != "" {
+			h.log.WithField("id", id).Info("Answer retrieved by host")
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{
+				"id":     host.ID,
+				"answer": host.Answer,
+			})
+			return
+		}
+
+		time.Sleep(pollInterval)
+	}
+
+	// No answer after 10 seconds
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
-		"id":     host.ID,
-		"answer": host.Answer,
-	})
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {

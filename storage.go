@@ -17,6 +17,8 @@ type Store interface {
 	List() ([]*HostListItem, error)
 	Delete(id string) error
 	SetAnswer(id string, answer string) error
+	UpdateLastSeen(id string) error
+	SweepInactive(timeout time.Duration) int
 }
 
 type MemoryStore struct {
@@ -91,4 +93,33 @@ func (s *MemoryStore) SetAnswer(id string, answer string) error {
 	}
 	host.Answer = answer
 	return nil
+}
+
+func (s *MemoryStore) UpdateLastSeen(id string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	host, exists := s.hosts[id]
+	if !exists {
+		return ErrNotFound
+	}
+	host.LastSeen = time.Now()
+	return nil
+}
+
+func (s *MemoryStore) SweepInactive(timeout time.Duration) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	cutoff := time.Now().Add(-timeout)
+	removed := 0
+
+	for id, host := range s.hosts {
+		if host.LastSeen.Before(cutoff) {
+			delete(s.hosts, id)
+			removed++
+		}
+	}
+
+	return removed
 }

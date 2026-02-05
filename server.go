@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -16,6 +17,10 @@ func startServer(port string) error {
 
 	store := NewMemoryStore()
 	handler := NewHandler(store, logger)
+
+	// Start background sweeper to remove inactive hosts
+	// Timeout: 15 seconds (10s long poll + 5s grace period)
+	go startSweeper(store, 15*time.Second, 10*time.Second, logger)
 
 	mux := http.NewServeMux()
 
@@ -62,4 +67,21 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		}).Info("Request received")
 		next.ServeHTTP(w, r)
 	})
+}
+
+func startSweeper(store Store, timeout time.Duration, interval time.Duration, log *logrus.Logger) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	log.WithFields(logrus.Fields{
+		"timeout":  timeout,
+		"interval": interval,
+	}).Info("Starting inactive host sweeper")
+
+	for range ticker.C {
+		removed := store.SweepInactive(timeout)
+		if removed > 0 {
+			log.WithField("count", removed).Info("Swept inactive hosts")
+		}
+	}
 }

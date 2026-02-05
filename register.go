@@ -143,24 +143,24 @@ func (rs *registerSession) sendRegistrationWithRetry(jsonData []byte) error {
 }
 
 func (rs *registerSession) pollForAnswer() (string, error) {
-	const pollInterval = 2 * time.Second
 	const maxWait = 60 * time.Second
 	deadline := time.Now().Add(maxWait)
 
 	client := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: 15 * time.Second, // 10s server wait + 5s network overhead
 	}
 
 	for time.Now().Before(deadline) {
 		resp, err := client.Get(rs.host + "/api/1/answer/" + rs.id)
 		if err != nil {
-			time.Sleep(pollInterval)
+			// Small delay before retry on error
+			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode == http.StatusNoContent {
-			time.Sleep(pollInterval)
+			// Server waited 10 seconds and found nothing, poll immediately
 			continue
 		}
 
