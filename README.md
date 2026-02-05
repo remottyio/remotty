@@ -61,23 +61,6 @@ The terminal will:
 
 ## API Endpoints
 
-### GET /
-
-View all registered hosts in HTML format.
-
-**Response:** HTML page with list of registered hosts and connect buttons.
-
-### GET /health
-
-Health check endpoint for load balancers.
-
-**Response:**
-```json
-{
-  "status": "ok"
-}
-```
-
 ## API Version 1 (`/api/1/`)
 
 ### POST /api/1/register
@@ -165,7 +148,7 @@ Poll for answer (used by terminal client). Returns `204 No Content` if no answer
        │                                 │  (HTML with host list)            │
        │                                 ├──────────────────────────────────>│
        │                                 │                                   │
-       │                                 │  4. GET /api/1/connect/:id?raw=true│
+       │                                 │ 4. GET /api/1/connect/:id?raw=true│
        │                                 │<──────────────────────────────────┤
        │                                 │  {sdp-offer}                      │
        │                                 ├──────────────────────────────────>│
@@ -179,12 +162,12 @@ Poll for answer (used by terminal client). Returns `204 No Content` if no answer
        ├────────────────────────────────>│                                   │
        │    200 OK {answer}              │                                   │
        │<────────────────────────────────┤                                   │
-       │                                  │                                   │
-       │                      7. WebRTC Connection Established                │
-       │<─────────────────────────────────────────────────────────────────────┤
-       │                                                                       │
-       │              8. Bidirectional Terminal I/O over WebRTC               │
-       │<─────────────────────────────────────────────────────────────────────>│
+       │                                 │                                   │
+       │                     7. WebRTC Connection Established                │
+       │<────────────────────────────────────────────────────────────────────┤
+       │                                                                     │
+       │             8. Bidirectional Terminal I/O over WebRTC               │
+       │<───────────────────────────────────────────────────────────────────>│
 ```
 
 ## Security Considerations
