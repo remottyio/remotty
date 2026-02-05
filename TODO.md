@@ -12,5 +12,5 @@
 - [ ] Automatically sweep agents that are no longer listening
 - [ ] Add a flag to allow only one time shell, or multiple times
 - [x] Change endpoints so API goes to /api/1/register and /api/1/list
-- [ ] Upgrade to latest pion
+- [x] Upgrade to latest pion
 - [x] Run go vulnchk during github actions
