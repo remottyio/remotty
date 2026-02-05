@@ -1,12 +1,17 @@
 package main
 
 import (
+	"embed"
+	"io/fs"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
 )
+
+//go:embed static
+var staticFS embed.FS
 
 var logger = logrus.New()
 
@@ -44,9 +49,12 @@ func startServer(port string) error {
 		}
 	})
 
-	// Static files
-	fs := http.FileServer(http.Dir("static"))
-	mux.Handle("/static/", http.StripPrefix("/static/", fs))
+	// Static files from embedded FS
+	staticContent, err := fs.Sub(staticFS, "static")
+	if err != nil {
+		return err
+	}
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticContent))))
 
 	if port == "" {
 		port = "8080"
